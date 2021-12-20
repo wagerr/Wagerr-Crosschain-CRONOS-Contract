@@ -190,9 +190,9 @@ contract BettingV4 is Initializable, UUPSUpgradeable, OwnableUpgradeable {
 
     function convertFeeToCoin(address _coin) public view returns (uint256) {
         if (_coin == WCRO) return fee;
-        uint256 fee = getAmountOutMin(WCRO, _coin, fee);
+        uint256 _fee = getAmountOutMin(WCRO, _coin, fee);
 
-        return fee;
+        return _fee;
     }
 
     function validateAndUpdateState(
@@ -242,6 +242,8 @@ contract BettingV4 is Initializable, UUPSUpgradeable, OwnableUpgradeable {
         payable
         bettingEnable
     {
+        require(Coins["CRO"] != address(0), "Coin not supported");
+        
         uint256 amountOutMin = getAmountOutMin(WCRO, CWGR, msg.value);
         uint256 fees = convertFeeToCoin(CWGR);
         amountOutMin = amountOutMin.sub(fees);
@@ -339,6 +341,7 @@ contract BettingV4 is Initializable, UUPSUpgradeable, OwnableUpgradeable {
         external
         bettingEnable
     {
+        require(Coins["WGR"] != address(0), "Coin not supported");
         uint256 fees = convertFeeToCoin(CWGR);
         uint256 amount = _amount.sub(fees);
 
