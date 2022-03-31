@@ -24,8 +24,8 @@ async function main() {
   const deployer = signers[0];
   const user = signers[1];
 
-  const bettingV4 = await ethers.getContractAt(
-    "BettingV4",
+  const betting = await ethers.getContractAt(
+    "Betting",
     "0xfB41d43b533151e473A40f8a9a40aDD3D2E1475d", // deployed with VVSSwap router ,)
 
     deployer
@@ -50,23 +50,24 @@ async function main() {
     "IExchangeRouter",
     "0xF661bFE59b16032a02d214f27F68219AFCab87F4" // VVSSwap CRO router
   );
-  //await withdraw(deployer, bettingV4);
-  //await updateExchangeRouter(deployer, bettingV4);
+  //await withdraw(deployer, betting);
+  //await updateExchangeRouter(deployer, betting);
   //await addLiquidity(user, exchangeRouterTestNet, cwgr);
   //await removeLiquidity(user, bscExchangeRouterTestNet, cwgr);
-  //await addCoins(deployer, bettingV4);
-  //await setFee(deployer, bettingV4);
-  //await TestBet(user, deployer, bettingV4, cwgr, USDTCRO);
-  //await printBetStat(bettingV4);
-  //await TestRefund(user, deployer, bettingV4, cwgr);
-  //await TestPayout(user, deployer, bettingV4, cwgr, WCRO);
-  await testOther(user, deployer, bettingV4, cwgr, WCRO, exchangeRouterTestNet);
-  //await onOffBetting(deployer, bettingV4);
+  await addCoins(deployer, betting);
+  //await removeCoins(deployer, betting);
+  //await setFee(deployer, betting);
+  //await TestBet(user, deployer, betting, cwgr, USDTCRO);
+  //await printBetStat(betting);
+  //await TestRefund(user, deployer, betting, cwgr);
+  //await TestPayout(user, deployer, betting, cwgr, WCRO);
+  //await testOther(user, deployer, betting, cwgr, WCRO, exchangeRouterTestNet);
+  //await onOffBetting(deployer, betting);
 }
 
 
-async function withdraw(deployer, bettingV4) {
-  await bettingV4.connect(deployer).withdraw(ethers.utils.parseEther("140"));
+async function withdraw(deployer, betting) {
+  await betting.connect(deployer).withdraw(ethers.utils.parseEther("140"));
 }
 
 async function addLiquidity(user, exchangeRouter, cwgr) {
@@ -99,18 +100,18 @@ async function removeLiquidity(user, exchangeRouter, cwgr) {
 async function testOther(
   user,
   deployer,
-  bettingV4,
+  betting,
   cwgr,
   WCRO,
   exchangeRouter
 ) {
 
-  const bet = await bettingV4.Bets("40");
+  const bet = await betting.Bets("40");
   console.log(bet)
   /*const wcroBalance = await ethers.provider.getBalance(user.address);
   console.log(ethers.utils.formatEther(wcroBalance));*/
 
-  /* const amountMinBNBIn = await bettingV4.getAmountInMin(
+  /* const amountMinBNBIn = await betting.getAmountInMin(
     WCRO.address,
     cwgr.address,
     ethers.utils.parseEther("100")
@@ -123,100 +124,105 @@ async function testOther(
     cwgr.address,
   ]);
 
-  const fee = await bettingV4.convertFeeToCoin(cwgr.address);
+  const fee = await betting.convertFeeToCoin(cwgr.address);
   console.log("fee :", ethers.utils.formatEther(fee));
 
   console.log("CRO-WGR: ", ethers.utils.formatEther(amountOutCROMin[1]));*/
 }
 
-async function onOffBetting(deployer, bettingV4) {
-  await bettingV4.connect(deployer).onOff();
+async function onOffBetting(deployer, betting) {
+  await betting.connect(deployer).onOff();
 }
 
-async function updateExchangeRouter(deployer, bettingV4) {
-  await bettingV4
+async function updateExchangeRouter(deployer, betting) {
+  await betting
     .connect(deployer)
     .updateExchangeRouter("0x3380aE82e39E42Ca34EbEd69aF67fAa0683Bb5c1");
 }
 
-async function addCoins(deployer, bettingV4) {
-  /*await bettingV4
+async function addCoins(deployer, betting) {
+ 
+  /*await betting
     .connect(deployer)
-    .addCoin("CUSDT", "0x78867bbeef44f2326bf8ddd1941a4439382ef2a7");*/
-  await bettingV4
+    .addCoin("CUSDT", "0x78867bbeef44f2326bf8ddd1941a4439382ef2a7");
+  await betting
     .connect(deployer)
-    .addCoin("CRO", "0xca2503482e5D6D762b524978f400f03E38d5F962"); //WCRO address
-  await bettingV4
+    .addCoin("CRO", "0xca2503482e5D6D762b524978f400f03E38d5F962"); //WCRO address*/
+  await betting
     .connect(deployer)
     .addCoin("WGR", "0x4EaC16E4D2bB1f737F0eC307617F38eF9b1e7D5e");
 }
 
-async function setFee(deployer, bettingV4) {
-  await bettingV4
+async function removeCoins(deployer, betting) {
+  await betting.connect(deployer).removeCoin("WGR");
+}
+
+async function setFee(deployer, betting) {
+  await betting
     .connect(deployer)
     .setFee(ethers.utils.parseEther("0.001009820"));
 }
-async function TestBet(user, deployer, bettingV4, cwgr, USDTCRO) {
+async function TestBet(user, deployer, betting, cwgr, USDTCRO) {
   await cwgr
     .connect(user)
-    .approve(bettingV4.address, ethers.utils.parseEther("110"));
+    .approve(betting.address, ethers.utils.parseEther("110"));
 
   //for (i = 0; i < 10; i++) {
-  await bettingV4
+  await betting
     .connect(user)
     .betWithWGR("4201036777010001", ethers.utils.parseEther("105"));
   //}*/
  
-  /*await bettingV4.connect(user).betWithNativeCoin("420103877c010001", {
+  /*await betting.connect(user).betWithNativeCoin("420103877c010001", {
     value: ethers.utils.parseEther("1"),
   });*/
 
   /*await BUSD.connect(user).approve(
-    bettingV4.address,
+    betting.address,
     ethers.utils.parseEther("100")
   );
-  await bettingV4
+  await betting
     .connect(user)
     .betWithToken("sdfsdfsfsdfsdf", "BUSD", ethers.utils.parseEther("50"));
 */
   console.log(
     "total Bets:",
-    ethers.utils.formatEther(await bettingV4.totalBets("total"))
+    ethers.utils.formatEther(await betting.totalBets("total"))
   );
 
   console.log(
     "total Bets (WGR):",
-    ethers.utils.formatEther(await bettingV4.totalBets("WGR"))
+    ethers.utils.formatEther(await betting.totalBets("WGR"))
   );
   console.log(
     "total Bets (CRO):",
-    ethers.utils.formatEther(await bettingV4.totalBets("CRO"))
+    ethers.utils.formatEther(await betting.totalBets("CRO"))
   );
 }
 
-async function TestRefund(user, deployer, bettingV4, cwgr, CUSDT) {
+async function TestRefund(user, deployer, betting, cwgr, CUSDT) {
   //bnb
-  betIndex = Number(await bettingV4.betIndex());
-  await bettingV4.connect(deployer).refund(betIndex - 1);
+  betIndex = Number(await betting.betIndex());
+  await betting.connect(deployer).refund(betIndex - 1);
 
   console.log(
     "total Refunds:",
-    ethers.utils.formatEther(await bettingV4.totalRefunds("total"))
+    ethers.utils.formatEther(await betting.totalRefunds("total"))
   );
   console.log(
     "total Refunds (WGR):",
-    ethers.utils.formatEther(await bettingV4.totalRefunds("WGR"))
+    ethers.utils.formatEther(await betting.totalRefunds("WGR"))
   );
   console.log(
     "total Refunds (CRO):",
-    ethers.utils.formatEther(await bettingV4.totalRefunds("CRO"))
+    ethers.utils.formatEther(await betting.totalRefunds("CRO"))
   );
 }
 
-async function TestPayout(user, deployer, bettingV4, cwgr) {
+async function TestPayout(user, deployer, betting, cwgr) {
   //bwgr
   
-    const tx = await bettingV4
+    const tx = await betting
       .connect(deployer)
       .processPayout(
         40,
@@ -230,59 +236,59 @@ async function TestPayout(user, deployer, bettingV4, cwgr) {
 
   console.log(
     "total Payout:",
-    ethers.utils.formatEther(await bettingV4.totalPayout("total"))
+    ethers.utils.formatEther(await betting.totalPayout("total"))
   );
   console.log(
     "total Payout (WGR):",
-    ethers.utils.formatEther(await bettingV4.totalPayout("WGR"))
+    ethers.utils.formatEther(await betting.totalPayout("WGR"))
   );
 
   console.log(
     "total Payout (CRO):",
-    ethers.utils.formatEther(await bettingV4.totalPayout("CRO"))
+    ethers.utils.formatEther(await betting.totalPayout("CRO"))
   );
 }
 
-async function printBetStat(bettingV4) {
+async function printBetStat(betting) {
   console.log(
     "total Bets:",
-    ethers.utils.formatEther(await bettingV4.totalBets("total"))
+    ethers.utils.formatEther(await betting.totalBets("total"))
   );
 
   console.log(
     "total Bets (WGR):",
-    ethers.utils.formatEther(await bettingV4.totalBets("WGR"))
+    ethers.utils.formatEther(await betting.totalBets("WGR"))
   );
   console.log(
     "total Bets (CRO):",
-    ethers.utils.formatEther(await bettingV4.totalBets("CRO"))
+    ethers.utils.formatEther(await betting.totalBets("CRO"))
   );
 
   console.log(
     "total Refunds:",
-    ethers.utils.formatEther(await bettingV4.totalRefunds("total"))
+    ethers.utils.formatEther(await betting.totalRefunds("total"))
   );
   console.log(
     "total Refunds (WGR):",
-    ethers.utils.formatEther(await bettingV4.totalRefunds("WGR"))
+    ethers.utils.formatEther(await betting.totalRefunds("WGR"))
   );
   console.log(
     "total Refunds (CRO):",
-    ethers.utils.formatEther(await bettingV4.totalRefunds("CRO"))
+    ethers.utils.formatEther(await betting.totalRefunds("CRO"))
   );
 
   console.log(
     "total Payout:",
-    ethers.utils.formatEther(await bettingV4.totalPayout("total"))
+    ethers.utils.formatEther(await betting.totalPayout("total"))
   );
   console.log(
     "total Payout (WGR):",
-    ethers.utils.formatEther(await bettingV4.totalPayout("WGR"))
+    ethers.utils.formatEther(await betting.totalPayout("WGR"))
   );
 
   console.log(
     "total Payout (CRO):",
-    ethers.utils.formatEther(await bettingV4.totalPayout("CRO"))
+    ethers.utils.formatEther(await betting.totalPayout("CRO"))
   );
 }
 
