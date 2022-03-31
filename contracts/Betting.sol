@@ -8,7 +8,7 @@ import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import "./interfaces/IExchangeRouter.sol";
 import "./interfaces/IWETH.sol";
 
-contract BettingV4 is Initializable, UUPSUpgradeable, OwnableUpgradeable {
+contract Betting is Initializable, UUPSUpgradeable, OwnableUpgradeable {
     using SafeCRC20 for ICRC20;
     using SafeMath for uint256;
 
@@ -33,6 +33,10 @@ contract BettingV4 is Initializable, UUPSUpgradeable, OwnableUpgradeable {
         address _wcro,
         address _exchangeRouter
     ) public initializer {
+        require(_token != address(0), "bad token address");
+        require(_wcro != address(0), "bad wcro address");
+        require(_exchangeRouter != address(0), "bad exchangeRouter address");
+
         token = ICRC20(_token);
         betIndex = 1;
         EXCHANGE_ROUTER = _exchangeRouter;
@@ -94,9 +98,10 @@ contract BettingV4 is Initializable, UUPSUpgradeable, OwnableUpgradeable {
         string wgrPayoutTx,
         string finalStatus
     );
+    event feeChanged(uint256 fee);
 
     modifier bettingEnable() {
-        require(isBettingEnabled == true, "Betting is disabled");
+        require(isBettingEnabled, "Betting is disabled");
         _;
     }
 
@@ -175,6 +180,7 @@ contract BettingV4 is Initializable, UUPSUpgradeable, OwnableUpgradeable {
 
     function setFee(uint256 _fee) external onlyOwner {
         fee = _fee; //fees in CRO
+        emit feeChanged(fee);
     }
 
     // Function to withdraw all Ether from this contract.
@@ -206,11 +212,11 @@ contract BettingV4 is Initializable, UUPSUpgradeable, OwnableUpgradeable {
         //check amount cannot be less then 100 and greator then 10000
         require(
             _wgrAmount >= 100 ether && _wgrAmount <= 10000 ether,
-            "(min/max) bet (100/10000) CWGR"
+            "bad bet amount"
         );
 
         //opcode required
-        require(bytes(_opcode).length > 6, "invalid opcode");
+        require(bytes(_opcode).length > 6, "bad opcode");
 
         //store bet with action=pending
         Bets[betIndex] = BetStruct(
@@ -242,7 +248,7 @@ contract BettingV4 is Initializable, UUPSUpgradeable, OwnableUpgradeable {
         payable
         bettingEnable
     {
-        require(Coins["CRO"] != address(0), "Coin not supported");
+        require(Coins["CRO"] != address(0), "bad coin");
         
         uint256 amountOutMin = getAmountOutMin(WCRO, CWGR, msg.value);
         uint256 fees = convertFeeToCoin(CWGR);
@@ -287,7 +293,7 @@ contract BettingV4 is Initializable, UUPSUpgradeable, OwnableUpgradeable {
     ) external bettingEnable {
         address fromToken = Coins[_tokenFrom];
 
-        require(fromToken != address(0), "Coin not supported");
+        require(fromToken != address(0), "bad");
 
         uint256 amountOutMin = getAmountOutMin(fromToken, CWGR, _amount);
         uint256 fees = convertFeeToCoin(CWGR);
@@ -341,7 +347,7 @@ contract BettingV4 is Initializable, UUPSUpgradeable, OwnableUpgradeable {
         external
         bettingEnable
     {
-        require(Coins["WGR"] != address(0), "Coin not supported");
+        require(Coins["WGR"] != address(0), "bad coin");
         uint256 fees = convertFeeToCoin(CWGR);
         uint256 amount = _amount.sub(fees);
 
@@ -351,7 +357,7 @@ contract BettingV4 is Initializable, UUPSUpgradeable, OwnableUpgradeable {
             _opcode,
             msg.sender,
             "WGR",
-            amount
+            _amount
         );
 
         //transfer bet amount
@@ -373,12 +379,12 @@ contract BettingV4 is Initializable, UUPSUpgradeable, OwnableUpgradeable {
 
     function refund(uint256 _betIndex) external onlyOwner returns (bool) {
         //require valid betIndex
-        require(_betIndex < betIndex, "invalid betIndex");
+        require(_betIndex < betIndex, "bad betindex");
         //check final status should be pending.
         require(
             keccak256(abi.encodePacked(Bets[_betIndex].finalStatus)) ==
                 keccak256(abi.encodePacked("pending")),
-            "bet already processed"
+            "bet not pending"
         );
 
         //get bet by index
@@ -455,17 +461,17 @@ contract BettingV4 is Initializable, UUPSUpgradeable, OwnableUpgradeable {
         returns (bool)
     {
         //require valid betIndex
-        require(_betIndex < betIndex, "invalid betIndex");
+        require(_betIndex < betIndex, "bad betindex");
 
         //check final status should be pending.
         require(
             keccak256(abi.encodePacked(Bets[_betIndex].finalStatus)) ==
                 keccak256(abi.encodePacked("pending")),
-            "wgrBetTx already updated"
+            "tx already updated"
         );
 
         //require wgrBetTx
-        require(bytes(_txId).length > 0, "txId cannot be empty");
+        require(bytes(_txId).length > 0, "bad txid");
 
         Bets[_betIndex].wgrBetTx = _txId;
 
@@ -484,7 +490,7 @@ contract BettingV4 is Initializable, UUPSUpgradeable, OwnableUpgradeable {
         string calldata _resultType
     ) external onlyOwner returns (bool) {
         //require valid betIndex
-        require(_betIndex < betIndex, "invalid betIndex");
+        require(_betIndex < betIndex, "bad betindex");
         //check final status should be bet processed.
 
         // prevent "CompilerError: Stack too deep, try removing local variables."
@@ -497,17 +503,17 @@ contract BettingV4 is Initializable, UUPSUpgradeable, OwnableUpgradeable {
         require(
             keccak256(abi.encodePacked(finalStatus)) ==
                 keccak256(abi.encodePacked("processed")),
-            "bet not processed yet or refunded"
+            "unprocessed bet"
         );
 
         //require payoutTxId
-        require(bytes(payoutTx).length > 0, "payoutTxId cannot be empty");
+        require(bytes(payoutTx).length > 0, "bad payouttxid");
 
         //require resultType
-        require(bytes(resultType).length > 0, "resultType cannot be empty");
+        require(bytes(resultType).length > 0, "bad resulttype");
 
         //required payout amount
-        require(payout > 1 ether, "payout amount required");
+        require(payout > 1 ether, "bad payout");
 
         //store WGR chain payouttx id
         Bets[_betIndex].payoutTxId = payoutTx;
@@ -584,7 +590,7 @@ contract BettingV4 is Initializable, UUPSUpgradeable, OwnableUpgradeable {
         return true;
     }
 
-    function version() external view returns (string memory) {
-        return "v4";
+    function version() external pure returns (string memory) {
+        return "v5";
     }
 }
