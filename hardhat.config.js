@@ -33,7 +33,7 @@ module.exports = {
       timeout: 2000,
     },
     testnet: {
-      url: "https://cronos-testnet-3.crypto.org:8545/",
+      url: "https://evm-t3.cronos.org/",
       accounts: privateKeys.split(","),
       chainId: 338,
       gas: 5000000,

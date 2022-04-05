@@ -7,6 +7,29 @@
 const hre = require("hardhat");
 const { ethers } = hre;
 
+const network = hre.network.name;
+
+const configs = {
+  testnet: {
+    betting: {
+      latest: "0xfB41d43b533151e473A40f8a9a40aDD3D2E1475d",
+    },
+    cwgr: "0x4EaC16E4D2bB1f737F0eC307617F38eF9b1e7D5e",
+    wcro: "0xca2503482e5D6D762b524978f400f03E38d5F962",
+    usdtcro: "0x78867bbeef44f2326bf8ddd1941a4439382ef2a7",
+    exchangeRouter: "0xF661bFE59b16032a02d214f27F68219AFCab87F4", // VVSSwap CRO router
+  },
+  mainnet: {
+    betting: {
+      latest: "",
+    },
+    cwgr: "",
+    wcro: "",
+    usdtcro: "",
+    exchangeRouter: "",
+  },
+};
+
 async function main() {
   // Hardhat always runs the compile task when running scripts with its command
   // line interface.
@@ -26,34 +49,31 @@ async function main() {
 
   const betting = await ethers.getContractAt(
     "Betting",
-    "0xfB41d43b533151e473A40f8a9a40aDD3D2E1475d", // deployed with VVSSwap router ,)
+    configs[network].betting.latest, // deployed with VVSSwap router ,)
 
     deployer
   );
   const cwgr = await ethers.getContractAt(
     "ICRC20",
-    "0x4EaC16E4D2bB1f737F0eC307617F38eF9b1e7D5e",
+    configs[network].cwgr,
     deployer
   );
 
-  const WCRO = await ethers.getContractAt(
-    "ICRC20",
-    "0xca2503482e5D6D762b524978f400f03E38d5F962"
-  );
+  const WCRO = await ethers.getContractAt("ICRC20", configs[network].wcro);
 
   const USDTCRO = await ethers.getContractAt(
     "ICRC20",
-    "0x78867bbeef44f2326bf8ddd1941a4439382ef2a7"
+    configs[network].usdtcro
   );
 
-  const exchangeRouterTestNet = await ethers.getContractAt(
+  const exchangeRouter = await ethers.getContractAt(
     "IExchangeRouter",
-    "0xF661bFE59b16032a02d214f27F68219AFCab87F4" // VVSSwap CRO router
+    configs[network].exchangeRouter // VVSSwap CRO router
   );
   //await withdraw(deployer, betting);
   //await updateExchangeRouter(deployer, betting);
-  //await addLiquidity(user, exchangeRouterTestNet, cwgr);
-  //await removeLiquidity(user, bscExchangeRouterTestNet, cwgr);
+  //await addLiquidity(user, exchangeRouter, cwgr);
+  //await removeLiquidity(user, exchangeRouter, cwgr);
   await addCoins(deployer, betting);
   //await removeCoins(deployer, betting);
   //await setFee(deployer, betting);
@@ -61,7 +81,7 @@ async function main() {
   //await printBetStat(betting);
   //await TestRefund(user, deployer, betting, cwgr);
   //await TestPayout(user, deployer, betting, cwgr, WCRO);
-  //await testOther(user, deployer, betting, cwgr, WCRO, exchangeRouterTestNet);
+  //await testOther(user, deployer, betting, cwgr, WCRO, exchangeRouter);
   //await onOffBetting(deployer, betting);
 }
 
@@ -141,16 +161,13 @@ async function updateExchangeRouter(deployer, betting) {
 }
 
 async function addCoins(deployer, betting) {
- 
   /*await betting
     .connect(deployer)
-    .addCoin("CUSDT", "0x78867bbeef44f2326bf8ddd1941a4439382ef2a7");
+    .addCoin("CUSDT", configs[network].usdtcro);
   await betting
     .connect(deployer)
-    .addCoin("CRO", "0xca2503482e5D6D762b524978f400f03E38d5F962"); //WCRO address*/
-  await betting
-    .connect(deployer)
-    .addCoin("WGR", "0x4EaC16E4D2bB1f737F0eC307617F38eF9b1e7D5e");
+    .addCoin("CRO", configs[network].wcro); //WCRO address*/
+  await betting.connect(deployer).addCoin("WGR", configs[network].cwgr);
 }
 
 async function removeCoins(deployer, betting) {

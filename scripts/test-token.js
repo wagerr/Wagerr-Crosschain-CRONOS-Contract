@@ -7,6 +7,18 @@
 const { assert } = require("chai");
 const hre = require("hardhat");
 const { ethers } = hre;
+const network = hre.network.name;
+
+const configs = {
+  testnet: {
+    cwgr: "0x4EaC16E4D2bB1f737F0eC307617F38eF9b1e7D5e",
+  },
+  mainnet: {
+    cwgr: "",
+ },
+};
+
+
 
 async function main() {
   // Hardhat always runs the compile task when running scripts with its command
@@ -21,7 +33,7 @@ async function main() {
 
   const cwgr = await ethers.getContractAt(
     "CRC20Token",
-    "0x4EaC16E4D2bB1f737F0eC307617F38eF9b1e7D5e",
+    configs[network].cwgr,
     deployer
   );
 

@@ -8,6 +8,21 @@ const { assert } = require("chai");
 const hre = require("hardhat");
 const { ethers } = hre;
 
+const network = hre.network.name;
+
+const configs = {
+  testnet: {
+    betting: {
+      latest: "0xfB41d43b533151e473A40f8a9a40aDD3D2E1475d",
+    },
+  },
+  mainnet: {
+    betting: {
+      latest: "",
+    },
+  },
+};
+
 async function main() {
   // Hardhat always runs the compile task when running scripts with its command
   // line interface.
@@ -21,7 +36,7 @@ async function main() {
 
   const betting = await ethers.getContractAt(
     "Betting",
-    "0xfB41d43b533151e473A40f8a9a40aDD3D2E1475d", //old -> "0xD4AA2d3668fdD3cC145287378121A5D3a8f98190",
+    configs[network].betting.latest, //old -> "0xD4AA2d3668fdD3cC145287378121A5D3a8f98190",
     deployer
   );
 
