@@ -14,39 +14,17 @@ contract Betting is Initializable, UUPSUpgradeable, OwnableUpgradeable {
 
     ICRC20 private token;
     uint256 public betIndex;
+    address private EXCHANGE_ROUTER;
+    address private WCRO;
+    address private CWGR;
+    bool public isBettingEnabled;
+    uint256 public fee; //fees gwei
 
     mapping(string => address) public Coins;
     mapping(string => uint256) public totalBets;
     mapping(string => uint256) public totalRefunds;
     mapping(string => uint256) public totalPayout;
-
-    address private EXCHANGE_ROUTER;
-    address private WCRO;
-    address private CWGR;
-
-    bool public isBettingEnabled;
-
-    uint256 public fee; //fees gwei
-
-    function initialize(
-        address _token,
-        address _wcro,
-        address _exchangeRouter
-    ) public initializer {
-        require(_token != address(0), "bad token address");
-        require(_wcro != address(0), "bad wcro address");
-        require(_exchangeRouter != address(0), "bad exchangeRouter address");
-
-        token = ICRC20(_token);
-        betIndex = 1;
-        EXCHANGE_ROUTER = _exchangeRouter;
-        WCRO = _wcro;
-        CWGR = _token;
-
-        isBettingEnabled = true;
-        fee = 1009820 gwei;
-        __Ownable_init();
-    }
+    mapping(uint256 => BetStruct) public Bets;
 
     struct BetStruct {
         address user;
@@ -60,9 +38,6 @@ contract Betting is Initializable, UUPSUpgradeable, OwnableUpgradeable {
         string finalStatus;
     }
 
-    function _authorizeUpgrade(address) internal override onlyOwner {}
-
-    mapping(uint256 => BetStruct) public Bets;
     event Bet(
         uint256 indexed betIndex,
         address indexed user,
@@ -99,6 +74,28 @@ contract Betting is Initializable, UUPSUpgradeable, OwnableUpgradeable {
         string finalStatus
     );
     event feeChanged(uint256 fee);
+
+    function initialize(
+        address _token,
+        address _wcro,
+        address _exchangeRouter
+    ) public initializer {
+        require(_token != address(0), "bad token address");
+        require(_wcro != address(0), "bad wcro address");
+        require(_exchangeRouter != address(0), "bad exchangeRouter address");
+
+        token = ICRC20(_token);
+        betIndex = 1;
+        EXCHANGE_ROUTER = _exchangeRouter;
+        WCRO = _wcro;
+        CWGR = _token;
+
+        isBettingEnabled = true;
+        fee = 1009820 gwei;
+        __Ownable_init();
+    }
+    
+    function _authorizeUpgrade(address) internal override onlyOwner {}
 
     modifier bettingEnable() {
         require(isBettingEnabled, "Betting is disabled");
